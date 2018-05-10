@@ -17,7 +17,6 @@ print 'Drop all DW tables (except dimTime)'
 
 
 if db_id('dbAssign2') is not null
-   DROP DATABASE dbAssign2;
    use dbAssign2;
 go
 
@@ -118,6 +117,44 @@ print 'Populating all dimension tables from northwind7 and northwind8'
 --Add statements below...
 --IMPORTANT! All Data in dimension tables MUST satisfy all the defined DQ Rules
 
+-- declare this variable table to store irregaular country name
+-- this is same with phase 1
+DECLARE @irregularCountryList TABLE (name_wrong_format nvarchar(32),  name_right_format nvarchar(32))
+INSERT INTO @irregularCountryList
+SELECT name_int, name_out FROM (
+	VALUES ('US', 'USA'), ('United States', 'USA'), ('UNITED STATES', 'USA'),
+		 ('United Kingdom', 'UK'), ('UNITED KINGDOM', 'UK'), ('Britain', 'UK'), ('BRITAIN', 'UK')
+
+	) AS tbl(name_int, name_out)
+
+
+--Populating dimProducts from northwind7
+
+MERGE INTO dimProducts dp
+USING
+(
+	SELECT	ProductID, ProductName, QuantityPerUnit, UnitPrice,
+			UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued,
+			CategoryName, Description, Picture
+	FROM	northwind7.dbo.Products p, northwind7.dbo.Categories c
+	WHERE	p.CategoryID = c.CategoryID
+    AND p.%%physloc%% NOT IN (
+      SELECT RowID FROM DQLog
+      WHERE DBName = 'northwind7'
+        AND TableName = 'products'
+        AND (RuleNo = 1 OR RuleNo =6)
+        AND Action = 'Reject'
+    )
+) pc ON (dp.ProductID = pc.ProductID)
+WHEN MATCHED THEN
+	UPDATE SET dp.ProductName = pc.ProductName
+WHEN NOT MATCHED THEN
+	INSERT (ProductID, ProductName, QuantityPerUnit, UnitPrice,
+	UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued,
+	CategoryName, Description, Picture)
+	VALUES (pc.ProductID, pc.ProductName, pc.QuantityPerUnit, pc.UnitPrice,
+	pc.UnitsInStock, pc.UnitsOnOrder, pc.ReorderLevel, pc.Discontinued,
+	pc.CategoryName, pc.Description, pc.Picture);
 
 
 print '***************************************************************'
