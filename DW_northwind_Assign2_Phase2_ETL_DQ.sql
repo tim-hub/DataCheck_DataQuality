@@ -188,101 +188,55 @@ WHEN NOT MATCHED THEN
   pc.CategoryName, pc.Description, pc.Picture);
 
 
--- populating Customers from northwind7
--- pre populating
-
-DECLARE @TempCustomers TABLE
-(
-  RowID           BINARY(8),
-	CustomerKey			int		  IDENTITY(1,1) PRIMARY KEY,
-	CustomerID			nchar(5),
-	CompanyName			nvarchar(40),
-	ContactName			nvarchar(30),
-	ContactTitle		nvarchar(30),
-	Address				nvarchar(60),
-	City				nvarchar(15),
-	Region				nvarchar(15),
-	PostalCode			nvarchar(10),
-	Country				nvarchar(15),
-	Phone				nvarchar(24),
-	Fax					nvarchar(24)
-);
-
-MERGE INTO @TempCustomers tc
-USING
-(
-  SELECT %%physloc%% as RowID, CustomerID, CompanyName, ContactName, ContactTitle, Address,
-  City, Region, PostalCode, Country, Phone, Fax
-  FROM northwind7.dbo.Customers
-) c ON (
-  tc.CustomerID = c.CustomerID
-)
-WHEN MATCHED THEN
-  UPDATE SET tc.CompanyName = c.CompanyName
-WHEN NOT MATCHED THEN
-  INSERT (RowID, CustomerID, CompanyName, ContactName, ContactTitle, Address,
-  City, Region, PostalCode, Country, Phone, Fax)
-  VALUES (c.RowID, c.CustomerID, c.CompanyName, c.ContactName, c.ContactTitle, c.Address,
-  c.City, c.Region, c.PostalCode, c.Country, c.Phone, c.Fax);
-
-MERGE INTO @TempCustomers tc
-USING
-(
-  SELECT %%physloc%% as RowID, CustomerID, CompanyName, ContactName, ContactTitle, Address,
-  City, Region, PostalCode, Country, Phone, Fax
-  FROM northwind8.dbo.Customers
-) c ON (
-  tc.CustomerID = c.CustomerID
-)
-WHEN MATCHED THEN
-  UPDATE SET tc.CompanyName = c.CompanyName
-WHEN NOT MATCHED THEN
-  INSERT (RowID, CustomerID, CompanyName, ContactName, ContactTitle, Address,
-  City, Region, PostalCode, Country, Phone, Fax)
-  VALUES (c.RowID, c.CustomerID, c.CompanyName, c.ContactName, c.ContactTitle, c.Address,
-  c.City, c.Region, c.PostalCode, c.Country, c.Phone, c.Fax);
-
--- update temporary table
--- update northwind7 and northwin8
-UPDATE @TempCustomers
-SET     Country = 'USA'
-WHERE Country IN (
-    SELECT name_wrong_format FROM @irregularCountryList
-    WHERE name_right_format = 'USA'
-  ) AND RowID IN (
-    SELECT RowID FROM DQLog
-    WHERE TableName = 'Customers'
-    AND RuleNo = 4 AND Action='Fix'
-  )
-UPDATE @TempCustomers
-SET     Country = 'UK'
-WHERE Country IN (
-    SELECT name_wrong_format FROM @irregularCountryList
-    WHERE name_right_format = 'UK'
-  ) AND RowID IN (
-    SELECT RowID FROM DQLog
-    WHERE TableName = 'Customers'
-    AND RuleNo = 4 AND Action='Fix'
-  )
-
--- update postalcode in customers
-UPDATE @TempCustomers
-Set PostalCode = RIGHT(('000000'+ PostalCode), 6)
-WHERE RowID IN (
-  SELECT RowID FROM DQLog
-  WHERE DBName ='northwind7' AND TableName ='Customers'
-  AND RuleNo =5 AND Action ='Fix'
-)
-
--- merge into dimCustomers
+-- populating customers
+-- merge into dimCustomers 7
 MERGE INTO dimCustomers dc
 USING
 (
 	SELECT CustomerID, CompanyName, ContactName, ContactTitle, Address,
-	City, Region, PostalCode,
-  Country,
+	City, Region,
+  RightPostalCode =
+  CASE
+    WHEN %%physloc%% IN (
+      SELECT RowID FROM DQLog
+      WHERE DBName ='northwind7'
+      AND TableName ='Customers'
+      AND RuleNo =5
+      AND Action ='Fix')
+    THEN
+      RIGHT(('000000'+ PostalCode), 6)
+  END,
+  RightCountry =
+  CASE
+    WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind7'
+      AND TableName = 'Customers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    )
+    AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'USA'
+    )
+    THEN 'USA'
+    WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind7'
+      AND TableName = 'Customers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    )
+    AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'UK'
+    )
+    THEN 'UK'
+  END,
   Phone, Fax
-  FROM @TempCustomers
+  FROM northwind7.dbo.Customers
 ) c ON ( dc.CustomerID = c.CustomerID)
 WHEN MATCHED THEN
 	UPDATE SET dc.CompanyName = c.CompanyName
@@ -290,89 +244,107 @@ WHEN NOT MATCHED THEN
 	INSERT (CustomerID, CompanyName, ContactName, ContactTitle, Address,
 	City, Region, PostalCode, Country, Phone, Fax)
 	VALUES (c.CustomerID, c.CompanyName, c.ContactName, c.ContactTitle, c.Address,
-	c.City, c.Region, c.PostalCode, c.Country, c.Phone, c.Fax
+	c.City, c.Region, c.RightPostalCode, c.RightCountry, c.Phone, c.Fax
+  );
+
+
+-- merge into dimCustomers 8
+MERGE INTO dimCustomers dc
+USING
+(
+  SELECT CustomerID, CompanyName, ContactName, ContactTitle, Address,
+  City, Region,
+  RightPostalCode =
+  CASE
+    WHEN %%physloc%% IN (
+      SELECT RowID FROM DQLog
+      WHERE DBName ='northwind8'
+      AND TableName ='Customers'
+      AND RuleNo =5
+      AND Action ='Fix')
+    THEN
+      RIGHT(('000000'+ PostalCode), 6)
+  END,
+  RightCountry =
+  CASE
+    WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind8'
+      AND TableName = 'Customers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    )
+    AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'USA'
+    )
+    THEN 'USA'
+    WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind8'
+      AND TableName = 'Customers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    )
+    AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'UK'
+    )
+    THEN 'UK'
+  END,
+  Phone, Fax
+  FROM northwind8.dbo.Customers
+) c ON ( dc.CustomerID = c.CustomerID)
+WHEN MATCHED THEN
+  UPDATE SET dc.CompanyName = c.CompanyName
+WHEN NOT MATCHED THEN
+  INSERT (CustomerID, CompanyName, ContactName, ContactTitle, Address,
+  City, Region, PostalCode, Country, Phone, Fax)
+  VALUES (c.CustomerID, c.CompanyName, c.ContactName, c.ContactTitle, c.Address,
+  c.City, c.Region, c.RightPostalCode, c.RightCountry, c.Phone, c.Fax
   );
 
 -- populating dim suppliers
-DECLARE @TempSuppliers TABLE
-(
-  RowID           BINARY(8),
-	SupplierKey			int				IDENTITY(1,1) PRIMARY KEY,
-	SupplierID			int,
-	CompanyName			nvarchar(40),
-	ContactName			nvarchar(30),
-	ContactTitle		nvarchar(30),
-	Address				nvarchar(60),
-	City				nvarchar(15),
-	Region				nvarchar(15),
-	PostalCode			nvarchar(10),
-	Country				nvarchar(15),
-	Phone				nvarchar(24),
-	Fax					nvarchar(24),
-	HomePage			ntext
-);
-
--- preparing merging
-MERGE INTO @TempSuppliers ds
-USING
-(
-	SELECT  %%physloc%% as RowID, SupplierID, CompanyName, ContactName, ContactTitle,
-	Address, City, Region, PostalCode, Country, Phone, Fax, HomePage
-  FROM northwind7.dbo.Suppliers
-) s ON (ds.SupplierID = s.SupplierID)
-WHEN MATCHED THEN
-	UPDATE SET ds.CompanyName = s.CompanyName
-WHEN NOT MATCHED THEN
-	INSERT (RowID, SupplierID, CompanyName, ContactName, ContactTitle,
-	Address, City, Region, PostalCode, Country, Phone, Fax, HomePage)
-	VALUES (s.RowID, s.SupplierID, s.CompanyName, s.ContactName, s.ContactTitle,
-	s.Address, s.City, s.Region, s.PostalCode, s.Country, s.Phone, s.Fax, s.HomePage
-  );
-
-MERGE INTO @TempSuppliers ds
-USING
-(
-	SELECT %%physloc%% as RowID, SupplierID, CompanyName, ContactName, ContactTitle,
-	Address, City, Region, PostalCode, Country, Phone, Fax, HomePage
-  FROM northwind8.dbo.Suppliers
-) s ON (ds.SupplierID = s.SupplierID)
-WHEN MATCHED THEN
-	UPDATE SET ds.CompanyName = s.CompanyName
-WHEN NOT MATCHED THEN
-	INSERT (RowID, SupplierID, CompanyName, ContactName, ContactTitle,
-	Address, City, Region, PostalCode, Country, Phone, Fax, HomePage)
-	VALUES (s.RowID, s.SupplierID, s.CompanyName, s.ContactName, s.ContactTitle,
-	s.Address, s.City, s.Region, s.PostalCode, s.Country, s.Phone, s.Fax, s.HomePage
-  );
-
--- update temporary suppliers table
--- update northwind7 and northwin8
-UPDATE @TempSuppliers
-SET     Country = 'USA'
-WHERE Country IN (
-    SELECT name_wrong_format FROM @irregularCountryList
-    WHERE name_right_format = 'USA'
-  ) AND RowID IN (
-    SELECT RowID FROM DQLog
-    WHERE TableName = 'Customers'
-    AND RuleNo = 4 AND Action='Fix'
-  )
-UPDATE @TempSuppliers
-SET     Country = 'UK'
-WHERE Country IN (
-    SELECT name_wrong_format FROM @irregularCountryList
-    WHERE name_right_format = 'UK'
-  ) AND RowID IN (
-    SELECT RowID FROM DQLog
-    WHERE TableName = 'Customers'
-    AND RuleNo = 4 AND Action='Fix'
-  )
-
--- merge into dim suppliers
+-- merge into dim suppliers northwind 7
 MERGE INTO dimSuppliers ds
 USING
 (
-	SELECT * FROM @TempSuppliers
+	SELECT SupplierID, CompanyName, ContactName, ContactTitle,
+	Address, City, Region, PostalCode,
+  RightCountry =
+  CASE
+    WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind7'
+      AND TableName = 'Suppliers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    ) AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'USA'
+    )
+    THEN 'USA'
+        WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind7'
+      AND TableName = 'Suppliers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    ) AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'UK'
+    )
+    THEN 'UK'
+    ELSE
+      Country
+  END
+  ,
+  Phone, Fax, HomePage
+  FROM northwind7.dbo.Suppliers
 ) s ON (ds.SupplierID = s.SupplierID)
 WHEN MATCHED THEN
 	UPDATE SET ds.CompanyName = s.CompanyName
@@ -380,7 +352,55 @@ WHEN NOT MATCHED THEN
 	INSERT (SupplierID, CompanyName, ContactName, ContactTitle,
 	Address, City, Region, PostalCode, Country, Phone, Fax, HomePage)
 	VALUES (s.SupplierID, s.CompanyName, s.ContactName, s.ContactTitle,
-	s.Address, s.City, s.Region, s.PostalCode, s.Country, s.Phone, s.Fax, s.HomePage
+	s.Address, s.City, s.Region, s.PostalCode, s.RightCountry, s.Phone, s.Fax, s.HomePage
+  );
+
+-- merge into dim suppliers northwind 8
+MERGE INTO dimSuppliers ds
+USING
+(
+  SELECT SupplierID, CompanyName, ContactName, ContactTitle,
+  Address, City, Region, PostalCode,
+  RightCountry =
+  CASE
+    WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind8'
+      AND TableName = 'Suppliers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    ) AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'USA'
+    )
+    THEN 'USA'
+        WHEN %%physloc%% in (
+      SELECT RowID From DQLog
+      WHERE DBName = 'northwind8'
+      AND TableName = 'Suppliers'
+      AND RuleNo = 4
+      AND Action ='Fix'
+    ) AND
+    Country IN (
+      SELECT name_right_format FROM @irregularCountryList
+      WHERE name_right_format = 'UK'
+    )
+    THEN 'UK'
+    ELSE
+      Country
+  END
+  ,
+  Phone, Fax, HomePage
+  FROM northwind8.dbo.Suppliers
+) s ON (ds.SupplierID = s.SupplierID)
+WHEN MATCHED THEN
+  UPDATE SET ds.CompanyName = s.CompanyName
+WHEN NOT MATCHED THEN
+  INSERT (SupplierID, CompanyName, ContactName, ContactTitle,
+  Address, City, Region, PostalCode, Country, Phone, Fax, HomePage)
+  VALUES (s.SupplierID, s.CompanyName, s.ContactName, s.ContactTitle,
+  s.Address, s.City, s.Region, s.PostalCode, s.RightCountry, s.Phone, s.Fax, s.HomePage
   );
 
 print '***************************************************************'
@@ -408,7 +428,7 @@ USING
           SELECT RowID FROM DQLog
           WHERE DBName = 'northwind7'
           AND TableName = 'Orders'
-          AND (RuleNo = 11)
+          AND RuleNo = 11
           AND Action = 'Fix'
         )
         THEN -1
@@ -417,8 +437,7 @@ USING
           From dimTime
           WHERE dimTime.Date = o.ShippedDate
         )
-        END
-        AS [ShippedDateKey],
+      END AS [ShippedDateKey],
       od.OrderID as OrderID,
       od.UnitPrice as UnitPrice,
       od.Quantity as Quantity,
