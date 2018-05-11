@@ -1,0 +1,78 @@
+***************************************************************
+****** Section 1: Creating DW Tables
+***************************************************************
+Drop all DW tables (except dimTime)
+Creating all dimension tables required
+Creating a fact table required
+***************************************************************
+****** Section 2: Populate DW Dimension Tables (except dimTime)
+***************************************************************
+Populating all dimension tables from northwind7 and northwind8
+
+(7 row(s) affected)
+
+(74 row(s) affected)
+
+(75 row(s) affected)
+
+(13 row(s) affected)
+
+(78 row(s) affected)
+
+(29 row(s) affected)
+
+(29 row(s) affected)
+***************************************************************
+****** Section 3: Populate DW Fact Tables
+***************************************************************
+Populating the fact table from northwind7 and northwind8
+
+(335 row(s) affected)
+
+(1724 row(s) affected)
+***************************************************************
+****** Section 4: Counting rows of OLTP and DW Tables
+***************************************************************
+Checking Number of Rows of each table in the source databases and the DW Database
+Checking Number of Rows of each table in the source databases and the DW Database
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+Checking factOrder data
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+***************************************************************
+****** Section 5: Validating DW Data
+***************************************************************
+B: Validating Data in the fact table
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+
+(1 row(s) affected)
+***************************************************************
+***************************************************************
+My Northwind DW creation with data quality assurance is now completed
+***************************************************************

@@ -1,0 +1,209 @@
+***************************************************************
+****** Section 1: DQLog table
+***************************************************************
+***************************************************************
+****** Section 2: DQ Checking and Logging based on DQ Rules
+***************************************************************
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule ##: 	######################
+Action: 		#####
+Database: 	#####
+------------------------
+Table: 		#####
+------------------------
+
+(7 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 1: 	Reject if price is less or equal to 0
+Action: 		Reject
+Database: 	northwind7
+------------------------
+Table: 		Products
+------------------------
+
+(2 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 2: 	Quantity Check
+Action: 		Allow
+Database: 	northwind7
+------------------------
+Table: 		Order Details
+------------------------
+
+(1 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 3: 	Discount Check
+Action: 		Allow
+Database: 	northwind7
+------------------------
+Table: 		Order Details
+------------------------
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 4: 	Country Check
+Action: 		Fix
+Database: 	northwind7
+------------------------
+Table: 		Customers, Suppliers
+------------------------
+
+(2 row(s) affected)
+
+(1 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 5: 	Postcode Check
+Action: 		Fix
+Database: 	northwind7
+------------------------
+Table: 		Customers
+------------------------
+
+(12 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 6: 	Reject if categoryid or supplier id not exisits
+Action: 		Reject
+Database: 	northwind7
+------------------------
+Table: 		products
+------------------------
+
+(1 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 7: 	Check product id in Order Details
+Action: 		Reject
+Database: 	northwind7
+------------------------
+Table: 		Order Details
+------------------------
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 8: 	Check Customer Id, ship Address, ship city
+Action: 		Reject
+Database: 	northwind7
+------------------------
+Table: 		Orders
+------------------------
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 9: 	Check ShipVia
+Action: 		Allow
+Database: 	northwind7
+------------------------
+Table: 		Orders
+------------------------
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 10: 	Check Freight
+Action: 		Reject
+Database: 	northwind7
+------------------------
+Table: 		Orders
+------------------------
+
+(2 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 11: 	Check ShipDate
+Action: 		Fix
+Database: 	northwind7
+------------------------
+Table: 		Orders
+------------------------
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 1: 	Reject if price is less or equal to 0
+Action: 		Reject
+Database: 	northwind8
+------------------------
+Table: 		products
+------------------------
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 2: 	Quantity Check
+Action: 		Allow
+Database: 	northwind8
+------------------------
+Table: 		Order Details
+------------------------
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 3: 	Discount Check
+Action: 		Allow
+Database: 	northwind8
+------------------------
+Table: 		Order Details
+------------------------
+
+(1 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 4: 	Country Check
+Action: 		Fix
+Database: 	northwind8
+------------------------
+Table: 		Customers, Suppliers
+------------------------
+
+(2 row(s) affected)
+
+(0 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 6: 	Reject if categoryid or supplier id not exisits
+Action: 		Reject
+Database: 	northwind8
+------------------------
+Table: 		products
+------------------------
+
+(1 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 7: 	Check product id in Order Details
+Action: 		Reject
+Database: 	northwind8
+------------------------
+Table: 		Order Details
+------------------------
+
+(2 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 8: 	Check Customer Id, ship Address, ship city
+Action: 		Reject
+Database: 	northwind8
+------------------------
+Table: 		Orders
+------------------------
+
+(2 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 9: 	Check ShipVia
+Action: 		Allow
+Database: 	northwind8
+------------------------
+Table: 		Orders
+------------------------
+
+(1 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 10: 	Check Freight
+Action: 		Reject
+Database: 	northwind8
+------------------------
+Table: 		Orders
+------------------------
+
+(1 row(s) affected)
+================ BEGIN RULE ## CHECKING ==================
+DQ Rule 11: 	Check ShipDate
+Action: 		Fix
+Database: 	northwind8
+------------------------
+Table: 		Orders
+------------------------
+
+(0 row(s) affected)
+=============== END RULE ## CHECKING ====================
