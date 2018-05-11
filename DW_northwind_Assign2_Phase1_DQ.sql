@@ -50,11 +50,11 @@ print '------------------------'
 -- declare this variable table to store irregaular country name
 DECLARE @irregularCountryList TABLE (name_wrong_format nvarchar(32),  name_right_format nvarchar(32))
 INSERT INTO @irregularCountryList
-SELECT name_int, name_out FROM (
+SELECT name_in, name_out FROM (
 	VALUES ('US', 'USA'), ('United States', 'USA'), ('UNITED STATES', 'USA'),
 		 ('United Kingdom', 'UK'), ('UNITED KINGDOM', 'UK'), ('Britain', 'UK'), ('BRITAIN', 'UK')
 
-	) AS tbl(name_int, name_out)
+	) AS tbl(name_in, name_out)
 -- SELECT * from @irregularCountryList
 
 -- Start Northwind7
