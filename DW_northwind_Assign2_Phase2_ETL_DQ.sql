@@ -14,11 +14,13 @@ print '***************************************************************'
 print 'Drop all DW tables (except dimTime)'
 --Add drop statements below...
 --DO NOT DROP dimTime table as you must have used Script provided on the Moodle to create it
+-- if db_id('dbAssign2') is not null
+
+--    use dbAssign2;
+-- go
 
 
-if db_id('dbAssign2') is not null
-   use dbAssign2;
-go
+
 
 if exists (select * from sys.tables where name='factOrders')
 	drop table factOrders;
@@ -421,7 +423,8 @@ USING
       ds.SupplierKey as SupplierKey,
       dt1.TimeKey as [OrderDateKey],
       dt2.TimeKey as [RequiredDateKey],
-      -- o.ShippedDate as ShippedDate,
+
+      ShippedDateKey =
       -- use this to fix the shipped date
       CASE
         WHEN o.%%physloc%% IN (
@@ -434,10 +437,10 @@ USING
         THEN -1
         ELSE (
           SELECT TimeKey
-          From dimTime
-          WHERE dimTime.Date = o.ShippedDate
+          From dimTime dt3
+          WHERE dt3.Date = o.ShippedDate
         )
-      END AS [ShippedDateKey],
+      END,
       od.OrderID as OrderID,
       od.UnitPrice as UnitPrice,
       od.Quantity as Quantity,
@@ -453,7 +456,8 @@ USING
       dimProducts dp,
       dimCustomers dc,
       dimSuppliers ds,
-      dimTime dt1, dimTime dt2, dimTime dt3
+      dimTime dt1, dimTime dt2
+
   WHERE o.ShipVia = sh.ShipperID
       AND od.OrderID = o.OrderID
       AND o.CustomerID = dc.CustomerID
@@ -504,7 +508,100 @@ WHEN NOT MATCHED THEN
       o.ShipperCompanyName, o.ShipperPhone
       );
 
+--Populating factOrders from northwind8
+MERGE INTO  factOrders fo
+USING
+(
+  SELECT
+      dp.ProductKey as ProductKey,
+      dc.CustomerKey as CustomerKey,
+      ds.SupplierKey as SupplierKey,
+      dt1.TimeKey as [OrderDateKey],
+      dt2.TimeKey as [RequiredDateKey],
 
+      ShippedDateKey =
+      -- use this to fix the shipped date
+      CASE
+        WHEN o.%%physloc%% IN (
+          SELECT RowID FROM DQLog
+          WHERE DBName = 'northwind8'
+          AND TableName = 'Orders'
+          AND RuleNo = 11
+          AND Action = 'Fix'
+        )
+        THEN -1
+        ELSE (
+          SELECT TimeKey
+          From dimTime dt3
+          WHERE dt3.Date = o.ShippedDate
+        )
+      END,
+      od.OrderID as OrderID,
+      od.UnitPrice as UnitPrice,
+      od.Quantity as Quantity,
+      od.Discount as Discount,
+      od.Quantity*od.UnitPrice *(1-od.Discount) as [TotalPrice],
+      sh.CompanyName as ShipperCompanyName,
+      sh.Phone as ShipperPhone
+  FROM  northwind8.dbo.Shippers sh,
+      northwind8.dbo.Orders o,
+      northwind8.dbo.[Order Details] od,
+      northwind8.dbo.Products p,
+      northwind8.dbo.Suppliers su,
+      dimProducts dp,
+      dimCustomers dc,
+      dimSuppliers ds,
+      dimTime dt1, dimTime dt2
+
+  WHERE o.ShipVia = sh.ShipperID
+      AND od.OrderID = o.OrderID
+      AND o.CustomerID = dc.CustomerID
+      AND od.ProductID = dp.ProductID
+      AND od.ProductID = p.ProductID
+      AND p.SupplierID = su.SupplierID
+      AND su.SupplierID = ds.SupplierID
+      AND dt1.Date = o.OrderDate
+      AND dt2.Date = o.RequiredDate
+      -- AND dt3.Date = o.ShippedDate
+      -- AND p.%%physloc%% NOT IN (
+      --   SELECT RowID FROM DQLog
+      --   WHERE DBName = 'northwind8'
+      --   AND TableName = 'Products'
+      --   AND (RuleNo = 1 OR RuleNo =6)
+      --   AND Action = 'Reject'
+      -- )
+      -- because we already have dimProducts, suppliers, customers
+      -- rules about about customers, products and suppliers are not required either
+      AND od.%%physloc%% NOT IN (
+        SELECT RowID FROM DQLog
+        WHERE DBName = 'northwind8'
+        AND TableName = 'Order Details'
+        AND (RuleNo = 2 or RuleNo = 7)
+        AND Action = 'Reject'
+      )
+      AND o.%%physloc%% NOT IN (
+        SELECT RowID FROM DQLog
+        WHERE DBName = 'northwind8'
+        AND TableName = 'Order'
+        AND (RuleNo = 8 or RuleNo = 10)
+        AND Action = 'Reject'
+      )
+) o ON (o.CustomerKey = fo.CustomerKey
+    AND o.ProductKey = fo.ProductKey
+    AND o.SupplierKey = fo.SupplierKey
+    AND o.OrderDateKey = fo.OrderDateKey)
+WHEN MATCHED THEN
+  UPDATE SET fo.OrderID = o.OrderID
+WHEN NOT MATCHED THEN
+  INSERT (ProductKey, CustomerKey, SupplierKey, OrderDateKey,
+      RequiredDateKey, ShippedDateKey, OrderID,
+      UnitPrice, Quantity, Discount, TotalPrice,
+      ShipperCompanyName, ShipperPhone)
+  VALUES  (o.ProductKey, o.CustomerKey, o.SupplierKey, o.OrderDateKey,
+      o.RequiredDateKey, o.ShippedDateKey, o.OrderID,
+      o.UnitPrice, o.Quantity, o.Discount, o.TotalPrice,
+      o.ShipperCompanyName, o.ShipperPhone
+      );
 print '***************************************************************'
 print '****** Section 4: Counting rows of OLTP and DW Tables'
 print '***************************************************************'

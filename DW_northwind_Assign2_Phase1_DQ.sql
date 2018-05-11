@@ -13,10 +13,10 @@ print '****** Section 1: DQLog table'
 print '***************************************************************'
 -- Write your SQL statements below to DROP and CREATE a DQLog table
 
-if db_id('dbAssign2') is not null
-   DROP DATABASE dbAssign2;
-   use dbAssign2;
-go
+-- if db_id('dbAssign2') is not null
+
+--    use dbAssign2;
+-- go
 
 if exists (select * from sys.tables where name='DQLog')
 	drop table DQLog;
