@@ -65,7 +65,7 @@ print 'DQ Rule 1: 	Reject if price is less or equal to 0'
 print 'Action: 		Reject'
 print 'Database: 	northwind7'
 print '------------------------'
-print 'Table: 		products'
+print 'Table: 		Products'
 print '------------------------'
 
 --SELECT p.%%physloc%%, 'northwind7', 'Products', 1, 'Reject'
@@ -98,10 +98,11 @@ print '------------------------'
 print 'Table: 		Order Details'
 print '------------------------'
 
+
 Insert DQLog
-	SELECT od.%%physloc%%, 'northwind7', 'Order Details', 3, 'Allow'
-	From northwind7.dbo.[Order Details] od, northwind7.dbo.Products p
-	WHERE od.Discount >0.2 and od.ProductID=p.ProductID and p.UnitPrice>200
+	SELECT od.%%physloc%%, 'northwind8', 'Order Details', 3, 'Allow'
+	From northwind7.dbo.[Order Details] od
+	WHERE od.Discount >0.2 and  od.UnitPrice>200
 
 print '================ BEGIN RULE ## CHECKING =================='
 print 'DQ Rule 4: 	Country Check'
@@ -274,8 +275,8 @@ print '------------------------'
 
 Insert DQLog
 	SELECT od.%%physloc%%, 'northwind8', 'Order Details', 3, 'Allow'
-	From northwind8.dbo.[Order Details] od, northwind8.dbo.Products p
-	WHERE od.Discount >0.2 and od.ProductID=p.ProductID and p.UnitPrice>200
+	From northwind8.dbo.[Order Details] od
+	WHERE od.Discount >0.2 and  od.UnitPrice>200
 
 print '================ BEGIN RULE ## CHECKING =================='
 print 'DQ Rule 4: 	Country Check'

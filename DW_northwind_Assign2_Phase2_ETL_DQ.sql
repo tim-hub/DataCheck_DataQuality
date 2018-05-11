@@ -467,16 +467,15 @@ USING
       AND su.SupplierID = ds.SupplierID
       AND dt1.Date = o.OrderDate
       AND dt2.Date = o.RequiredDate
-      -- AND dt3.Date = o.ShippedDate
-      -- AND p.%%physloc%% NOT IN (
-      --   SELECT RowID FROM DQLog
-      --   WHERE DBName = 'northwind7'
-      --   AND TableName = 'Products'
-      --   AND (RuleNo = 1 OR RuleNo =6)
-      --   AND Action = 'Reject'
-      -- )
+      AND p.%%physloc%% NOT IN (
+        SELECT RowID FROM DQLog
+        WHERE DBName = 'northwind7'
+        AND TableName = 'Products'
+        AND (RuleNo = 1 OR RuleNo =6)
+        AND Action = 'Reject'
+      )
       -- because we already have dimProducts, suppliers, customers
-      -- rules about about customers, products and suppliers are not required either
+      -- rules about about customers, and suppliers are not required either
       AND od.%%physloc%% NOT IN (
         SELECT RowID FROM DQLog
         WHERE DBName = 'northwind7'
@@ -562,16 +561,15 @@ USING
       AND su.SupplierID = ds.SupplierID
       AND dt1.Date = o.OrderDate
       AND dt2.Date = o.RequiredDate
-      -- AND dt3.Date = o.ShippedDate
-      -- AND p.%%physloc%% NOT IN (
-      --   SELECT RowID FROM DQLog
-      --   WHERE DBName = 'northwind8'
-      --   AND TableName = 'Products'
-      --   AND (RuleNo = 1 OR RuleNo =6)
-      --   AND Action = 'Reject'
-      -- )
+      AND p.%%physloc%% NOT IN (
+        SELECT RowID FROM DQLog
+        WHERE DBName = 'northwind8'
+        AND TableName = 'Products'
+        AND (RuleNo = 1 OR RuleNo =6)
+        AND Action = 'Reject'
+      )
       -- because we already have dimProducts, suppliers, customers
-      -- rules about about customers, products and suppliers are not required either
+      -- rules about about customers, and suppliers are not required either
       AND od.%%physloc%% NOT IN (
         SELECT RowID FROM DQLog
         WHERE DBName = 'northwind8'
@@ -687,21 +685,20 @@ print '***************************************************************'
 print 'B: Validating Data in the fact table'
 --Add statements below...
 
--- Reject, check rule 1,2,11, the output should be 0
-SELECT count(*) From factOrders
+print ' Reject, check rule 1,2,11, the output should be 0'
+SELECT * From factOrders
   WHERE UnitPrice <= 0
     OR Quantity <0 OR Quantity = NULL
     OR ShippedDateKey = NULL
-
--- Allow, check rule 3, the output >=0
+print ' Allow, check rule 3, the output >=0'
 SELECT count(*) From factOrders
   WHERE UnitPrice>200 AND Discount >0.2
 
--- Allow. check rule 9, the output >= 0
+print 'Allow. check rule 9, the output >= 0'
 SELECT count(*) From factOrders
   WHERE ShipperCompanyName = null or ShipperPhone = null
 
--- Fix, check rule 11, the output >=0
+print 'Fix, check rule 11, the output >=0'
 SELECT count(*) From factOrders
   WHERE ShippedDateKey =-1
 
