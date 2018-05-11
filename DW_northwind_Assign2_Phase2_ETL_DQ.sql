@@ -687,6 +687,24 @@ print '***************************************************************'
 print 'B: Validating Data in the fact table'
 --Add statements below...
 
+-- Reject, check rule 1,2,11, the output should be 0
+SELECT count(*) From factOrders
+  WHERE UnitPrice <= 0
+    OR Quantity <0 OR Quantity = NULL
+    OR ShippedDateKey = NULL
+
+-- Allow, check rule 3, the output >=0
+SELECT count(*) From factOrders
+  WHERE UnitPrice>200 AND Discount >0.2
+
+-- Allow. check rule 9, the output >= 0
+SELECT count(*) From factOrders
+  WHERE ShipperCompanyName = null or ShipperPhone = null
+
+-- Fix, check rule 11, the output >=0
+SELECT count(*) From factOrders
+  WHERE ShippedDateKey =-1
+
 
 print '***************************************************************'
 print '***************************************************************'
