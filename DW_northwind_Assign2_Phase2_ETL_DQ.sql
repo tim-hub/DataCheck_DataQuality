@@ -475,7 +475,7 @@ USING
       --   AND Action = 'Reject'
       -- )
       -- because we already have dimProducts, suppliers, customers
-      -- rules about about customers, and suppliers are not required either
+      -- rules about about products, customers, and suppliers are not required either
       AND od.%%physloc%% NOT IN (
         SELECT RowID FROM DQLog
         WHERE DBName = 'northwind7'
@@ -561,15 +561,15 @@ USING
       AND su.SupplierID = ds.SupplierID
       AND dt1.Date = o.OrderDate
       AND dt2.Date = o.RequiredDate
-      AND p.%%physloc%% NOT IN (
-        SELECT RowID FROM DQLog
-        WHERE DBName = 'northwind8'
-        AND TableName = 'Products'
-        AND (RuleNo = 1 OR RuleNo =6)
-        AND Action = 'Reject'
-      )
+      -- AND p.%%physloc%% NOT IN (
+      --   SELECT RowID FROM DQLog
+      --   WHERE DBName = 'northwind8'
+      --   AND TableName = 'Products'
+      --   AND (RuleNo = 1 OR RuleNo =6)
+      --   AND Action = 'Reject'
+      -- )
       -- because we already have dimProducts, suppliers, customers
-      -- rules about about customers, and suppliers are not required either
+      -- rules about about products, customers, and suppliers are not required either
       AND od.%%physloc%% NOT IN (
         SELECT RowID FROM DQLog
         WHERE DBName = 'northwind8'

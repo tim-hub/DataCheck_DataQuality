@@ -100,7 +100,7 @@ print '------------------------'
 
 
 Insert DQLog
-	SELECT od.%%physloc%%, 'northwind8', 'Order Details', 3, 'Allow'
+	SELECT od.%%physloc%%, 'northwind7', 'Order Details', 3, 'Allow'
 	From northwind7.dbo.[Order Details] od
 	WHERE od.Discount >0.2 and  od.UnitPrice>200
 
