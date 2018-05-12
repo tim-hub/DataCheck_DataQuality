@@ -36,6 +36,19 @@ if exists (select * from sys.tables where name='dimSuppliers')
 	drop table dimSuppliers;
 go
 
+-- declare this variable table to store irregaular country name
+-- this is same with phase 1
+DECLARE @irregularCountryList TABLE (name_wrong_format nvarchar(32),  name_right_format nvarchar(32))
+
+INSERT INTO @irregularCountryList
+SELECT name_in, name_out FROM (
+	VALUES ('US', 'USA'), ('United States', 'USA'), ('UNITED STATES', 'USA'),
+		 ('United Kingdom', 'UK'), ('UNITED KINGDOM', 'UK'), ('Britain', 'UK'), ('BRITAIN', 'UK')
+
+	) AS tbl(name_in, name_out)
+
+
+DECLARE @changeTable TABLE (change nvarchar(20))
 
 
 
@@ -121,17 +134,6 @@ print '***************************************************************'
 print 'Populating all dimension tables from northwind7 and northwind8'
 --Add statements below...
 --IMPORTANT! All Data in dimension tables MUST satisfy all the defined DQ Rules
-
--- declare this variable table to store irregaular country name
--- this is same with phase 1
-DECLARE @irregularCountryList TABLE (name_wrong_format nvarchar(32),  name_right_format nvarchar(32))
-
-INSERT INTO @irregularCountryList
-SELECT name_in, name_out FROM (
-	VALUES ('US', 'USA'), ('United States', 'USA'), ('UNITED STATES', 'USA'),
-		 ('United Kingdom', 'UK'), ('UNITED KINGDOM', 'UK'), ('Britain', 'UK'), ('BRITAIN', 'UK')
-
-	) AS tbl(name_in, name_out)
 
 
 --Populating dimProducts from northwind7
@@ -325,7 +327,7 @@ USING
       AND Action ='Fix'
     ) AND
     Country IN (
-      SELECT name_right_format FROM @irregularCountryList
+      SELECT name_wrong_format FROM @irregularCountryList
       WHERE name_right_format = 'USA'
     )
     THEN 'USA'
@@ -337,7 +339,7 @@ USING
       AND Action ='Fix'
     ) AND
     Country IN (
-      SELECT name_right_format FROM @irregularCountryList
+      SELECT name_wrong_format FROM @irregularCountryList
       WHERE name_right_format = 'UK'
     )
     THEN 'UK'
@@ -373,7 +375,7 @@ USING
       AND Action ='Fix'
     ) AND
     Country IN (
-      SELECT name_right_format FROM @irregularCountryList
+      SELECT name_wrong_format FROM @irregularCountryList
       WHERE name_right_format = 'USA'
     )
     THEN 'USA'
@@ -385,7 +387,7 @@ USING
       AND Action ='Fix'
     ) AND
     Country IN (
-      SELECT name_right_format FROM @irregularCountryList
+      SELECT name_wrong_format FROM @irregularCountryList
       WHERE name_right_format = 'UK'
     )
     THEN 'UK'
@@ -412,6 +414,7 @@ print '***************************************************************'
 print 'Populating the fact table from northwind7 and northwind8'
 --Add statements below...
 --IMPORTANT! All Data in the fact table MUST satisfy all the defined DQ Rules
+
 
 --Populating factOrders from northwind7
 MERGE INTO  factOrders fo
@@ -496,6 +499,7 @@ USING
     AND o.OrderDateKey = fo.OrderDateKey)
 WHEN MATCHED THEN
   UPDATE SET fo.OrderID = o.OrderID
+  -- UPDATE SET @i= @i +1
 WHEN NOT MATCHED THEN
   INSERT (ProductKey, CustomerKey, SupplierKey, OrderDateKey,
       RequiredDateKey, ShippedDateKey, OrderID,
@@ -506,6 +510,9 @@ WHEN NOT MATCHED THEN
       o.UnitPrice, o.Quantity, o.Discount, o.TotalPrice,
       o.ShipperCompanyName, o.ShipperPhone
       );
+
+-- SELECT count(*)  AS [Unique in northwind7, should be less than northwin7 - reject rows]
+-- from factOrders
 
 --Populating factOrders from northwind8
 MERGE INTO  factOrders fo
@@ -600,6 +607,8 @@ WHEN NOT MATCHED THEN
       o.UnitPrice, o.Quantity, o.Discount, o.TotalPrice,
       o.ShipperCompanyName, o.ShipperPhone
       );
+
+
 print '***************************************************************'
 print '****** Section 4: Counting rows of OLTP and DW Tables'
 print '***************************************************************'
@@ -608,13 +617,13 @@ print 'Checking Number of Rows of each table in the source databases and the DW 
 -- ****************************************************************************
 -- FILL IN THE #####
 -- ****************************************************************************
--- Source table					Northwind7	Northwind8	Target table 	DW
+-- Source table					Northwind7	Northwind8	        Target table 	  DW
 -- ****************************************************************************
--- Table1						#####		#####		dim....			#####
--- Table2						#####		#####		dim....			#####
--- Table3						#####		#####		dim....			#####
--- Table..						#####		#####		dim....			#####
--- Table.. 						#####		#####		fact...			#####
+-- customers						        13		      78		      dimCustomers	  91
+-- products						          75		      75		      dimProducts			75
+-- suppliers						        29		      29		      dimSuppliers		29
+-- Order-Order Details-Shipper  352					1798		    factOrders			2059
+
 -- ****************************************************************************
 --Add statements below
 
@@ -679,6 +688,56 @@ FROM  northwind8.dbo.Shippers sh,
 WHERE o.ShipVia = sh.ShipperID
     AND od.OrderID = o.OrderID;
 
+-- extra check
+
+SELECT COUNT(*)
+  AS [Extra: Total Rows in Orders-Order Details-Shippers Table in northwind7]
+
+FROM northwind7.dbo.Shippers sh,
+    northwind7.dbo.Orders o,
+    northwind7.dbo.[Order Details] od
+    WHERE o.ShipVia = sh.ShipperID
+    AND od.OrderID = o.OrderID
+    AND o.%%physloc%% NOT IN (
+      SELECT RowID FROM DQLog
+      WHERE
+      TableName = 'Orders'
+      AND DBName = 'northwind7'
+      AND Action = 'Reject'
+    )
+    AND od.%%physloc%% NOT IN (
+      SELECT RowID FROM DQLog
+      WHERE
+      TableName = 'Order Details'
+      AND DBName = 'northwind7'
+      AND Action = 'Reject'
+    )
+
+
+SELECT COUNT(*)
+  AS [Extra: Total Rows in Orders-Order Details-Shippers Table in northwind8]
+   FROM northwind8.dbo.Shippers sh,
+    northwind8.dbo.Orders o,
+    northwind8.dbo.[Order Details] od
+    WHERE
+    o.ShipVia = sh.ShipperID
+    AND od.OrderID = o.OrderID
+    AND o.%%physloc%% NOT IN (
+      SELECT RowID FROM DQLog
+      WHERE
+      TableName = 'Orders'
+      AND DBName = 'northwind8'
+      AND Action = 'Reject'
+    )
+    AND od.%%physloc%% NOT IN (
+      SELECT RowID FROM DQLog
+      WHERE
+      TableName = 'Order Details'
+      AND DBName = 'northwind8'
+      AND Action = 'Reject'
+    )
+
+
 print '***************************************************************'
 print '****** Section 5: Validating DW Data'
 print '***************************************************************'
@@ -692,6 +751,7 @@ SELECT count(*) AS[Reject, check rule 2,11, the output should be 0]
     -- UnitPrice <= 0 OR
     Quantity <0 OR Quantity = NULL
     OR ShippedDateKey = NULL
+
 -- ' Allow, check rule 3, the output >=0'
 SELECT count(*) AS [Allow, check rule 3, the output >=0]
   From factOrders
@@ -707,6 +767,57 @@ SELECT count(*) AS [Fix, check rule 11, the output >=0]
   From factOrders
   WHERE ShippedDateKey =-1
 
+
+-- extra validation
+SELECT count(*) AS [Price Less Than 0, Data From Order Details, Not in rules]
+  FROM factOrders
+  WHERE UnitPrice <=0
+  OR TotalPrice <=0
+
+SELECT count(*) AS [Reject, Rule 1, should be 0]
+  FROM dimProducts
+  WHERE UnitPrice <=0
+
+SELECT count(*) AS [Fix, Rule 4, country fix, should be 0]
+  FROM (
+    SELECT Country From dimCustomers
+    UNION
+    SELECT Country FROM dimSuppliers
+  ) c
+  WHERE c.Country in (
+    SELECT name_wrong_format FROM @irregularCountryList
+  )
+
+SELECT count(*) AS [Fix, Rule 5, post code fix, should be 0]
+  FROM dimCustomers
+  WHERE PostalCode NOT IN (
+    SELECT PostalCode
+    from northwind8.dbo.Customers
+    ) AND  PostalCode != null AND LEN(PostalCode) < 6
+
+SELECT count(*) AS [Reject, Rule 6, check CategoryID through checking CategoryName, should be 0]
+  FROM dimProducts
+  WHERE CategoryName NOT IN (
+    SELECT CategoryName
+    FROM northwind7.dbo.Categories
+    UNION
+    SELECT CategoryName
+    FROM northwind8.dbo.Categories
+  ) OR CategoryName = null
+
+SELECT count(*) AS [Reject, Rule 6, check supplierID, should be 0]
+  FROM dimSuppliers
+  WHERE SupplierID NOT IN (
+    SELECT SupplierID
+    FROM northwind7.dbo.Suppliers
+    UNION
+    SELECT SupplierID
+    FROM northwind8.dbo.Suppliers
+  ) or SupplierID = null
+
+-- rule 7, product id from order details, does not exist in factOrders
+-- rule 8, ShipCompany, ShipAddress, CustomerID from orders do not exist in data warehouse
+-- rule 10, freight does not exist from order does not exist in fact orders
 
 print '***************************************************************'
 print '***************************************************************'

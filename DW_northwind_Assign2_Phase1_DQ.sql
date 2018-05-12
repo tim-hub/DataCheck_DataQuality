@@ -183,11 +183,13 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind7', 'Orders', 8, 'Reject'
 	From northwind7.dbo.[Orders] o
-	WHERE (o.ShipAddress = null and o.ShipCity=null) or
-		o.CustomerID= null or
+	WHERE
+		(o.ShipAddress = null and o.ShipCity=null)
+		AND
+		(o.CustomerID= null or
 		o.CustomerID not in (
 			Select CustomerID From northwind7.dbo.Customers
-		)
+		))
 
 
 print '================ BEGIN RULE ## CHECKING =================='
@@ -346,11 +348,12 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind8', 'Orders', 8, 'Reject'
 	From northwind8.dbo.[Orders] o
-	WHERE (o.ShipAddress = null and o.ShipCity=null) or
-		o.CustomerID= null or
+	WHERE (o.ShipAddress = null and o.ShipCity=null)
+		AND
+		(o.CustomerID= null or
 		o.CustomerID not in (
 			Select CustomerID From northwind8.dbo.Customers
-		)
+		))
 
 
 print '================ BEGIN RULE ## CHECKING =================='
