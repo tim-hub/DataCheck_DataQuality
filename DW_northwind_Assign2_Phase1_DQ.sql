@@ -471,3 +471,6 @@ print '=============== END RULE ## CHECKING ===================='
 -- Total Fix 	38
 -- Total Reject	19
 -- **************************************************************
+
+-- SELECT Count(*) From DQLog
+-- Group by RuleNo
