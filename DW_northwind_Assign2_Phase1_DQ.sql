@@ -217,7 +217,7 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind7', 'Orders', 10, 'Reject'
 	From northwind7.dbo.[Orders] o
-	WHERE o.Freight > (
+	WHERE o.Freight > 0.15 *(
 		Select Sum((1-od.Discount)* od.Quantity * od.UnitPrice) as TotalCost
 		From northwind7.dbo.[Order Details] od
 		Where o.OrderID = od.OrderID
@@ -382,7 +382,7 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind8', 'Orders', 10, 'Reject'
 	From northwind8.dbo.[Orders] o
-	WHERE o.Freight > (
+	WHERE o.Freight > 0.15*(
 		Select Sum((1-od.Discount)* od.Quantity * od.UnitPrice) as TotalCost
 		From northwind8.dbo.[Order Details] od
 		Where o.OrderID = od.OrderID
@@ -417,12 +417,12 @@ print '=============== END RULE ## CHECKING ===================='
 -- 7			0
 -- 8			0
 -- 9			0
--- 10			2
+-- 10			5
 -- 11			3
 -- **************************************************************
 -- Total Allow 	0
 -- Total Fix 	18
--- Total Reject	7
+-- Total Reject	10
 -- **************************************************************
 
 
@@ -441,12 +441,12 @@ print '=============== END RULE ## CHECKING ===================='
 -- 7			2
 -- 8			2
 -- 9			2
--- 10			1
+-- 10			3
 -- 11			18
 -- **************************************************************
 -- Total Allow 	3
 -- Total Fix 	20
--- Total Reject	7
+-- Total Reject	9
 -- **************************************************************
 
 
@@ -469,5 +469,5 @@ print '=============== END RULE ## CHECKING ===================='
 -- **************************************************************
 -- Total Allow 	3
 -- Total Fix 	38
--- Total Reject	14
+-- Total Reject	19
 -- **************************************************************
