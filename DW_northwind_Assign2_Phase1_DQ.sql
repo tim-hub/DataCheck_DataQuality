@@ -88,7 +88,7 @@ print '------------------------'
 Insert DQLog
 	SELECT od.%%physloc%%, 'northwind7', 'Order Details', 2, 'Reject'
 	From northwind7.dbo.[Order Details] od
-	WHERE od.Quantity <0 or od.Quantity = null
+	WHERE od.Quantity <0 or od.Quantity is null
 
 print '================ BEGIN RULE ## CHECKING =================='
 print 'DQ Rule 3: 	Discount Check'
@@ -148,8 +148,8 @@ print '------------------------'
 Insert DQLog
 	SELECT p.%%physloc%%, 'northwind7', 'Products', 6, 'Reject'
 	From northwind7.dbo.Products p
-	WHERE p.CategoryID = null or
-		p.SupplierID = null or
+	WHERE p.CategoryID is null or
+		p.SupplierID is null or
 		p.CategoryID not in (
 			Select CategoryID From northwind7.dbo.Categories
 		) or
@@ -168,7 +168,7 @@ print '------------------------'
 Insert DQLog
 	SELECT od.%%physloc%%, 'northwind7', 'Order Details', 7, 'Reject'
 	From northwind7.dbo.[Order Details] od
-	WHERE od.ProductID = null or
+	WHERE od.ProductID is null or
 		od.ProductID not in (
 			Select ProductID From northwind7.dbo.Products
 		)
@@ -184,9 +184,9 @@ Insert DQLog
 	SELECT o.%%physloc%%, 'northwind7', 'Orders', 8, 'Reject'
 	From northwind7.dbo.[Orders] o
 	WHERE
-		(o.ShipAddress = null and o.ShipCity=null)
+		(o.ShipAddress is null and o.ShipCity is null)
 		AND
-		(o.CustomerID= null or
+		(o.CustomerID is null or
 		o.CustomerID not in (
 			Select CustomerID From northwind7.dbo.Customers
 		))
@@ -202,7 +202,7 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind7', 'Orders', 9, 'Allow'
 	From northwind7.dbo.[Orders] o
-	WHERE o.ShipVia = null or
+	WHERE o.ShipVia is null or
 		o.ShipVia not in (
 			Select ShipperID from northwind7.dbo.Shippers
 		)
@@ -235,7 +235,7 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind7', 'Orders', 11, 'Fix'
 	From northwind7.dbo.[Orders] o
-	WHERE o.ShippedDate = null
+	WHERE o.ShippedDate is null
 
 -- Start Northwind8
 
@@ -265,7 +265,7 @@ print '------------------------'
 Insert DQLog
 	SELECT od.%%physloc%%, 'northwind8', 'Order Details', 2, 'Reject'
 	From northwind8.dbo.[Order Details] od
-	WHERE od.Quantity <0 or od.Quantity = null
+	WHERE od.Quantity <0 or od.Quantity is null
 
 print '================ BEGIN RULE ## CHECKING =================='
 print 'DQ Rule 3: 	Discount Check'
@@ -313,8 +313,8 @@ print '------------------------'
 Insert DQLog
 	SELECT p.%%physloc%%, 'northwind8', 'Products', 6, 'Reject'
 	From northwind8.dbo.Products p
-	WHERE p.CategoryID = null or
-		p.SupplierID = null or
+	WHERE p.CategoryID is null or
+		p.SupplierID is null or
 		p.CategoryID not in (
 			Select CategoryID From northwind8.dbo.Categories
 		) or
@@ -333,7 +333,7 @@ print '------------------------'
 Insert DQLog
 	SELECT od.%%physloc%%, 'northwind8', 'Order Details', 7, 'Reject'
 	From northwind8.dbo.[Order Details] od
-	WHERE od.ProductID = null or
+	WHERE od.ProductID is null or
 		od.ProductID not in (
 			Select ProductID From northwind8.dbo.Products
 		)
@@ -348,9 +348,9 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind8', 'Orders', 8, 'Reject'
 	From northwind8.dbo.[Orders] o
-	WHERE (o.ShipAddress = null and o.ShipCity=null)
+	WHERE (o.ShipAddress is null and o.ShipCity is null)
 		AND
-		(o.CustomerID= null or
+		(o.CustomerID is null or
 		o.CustomerID not in (
 			Select CustomerID From northwind8.dbo.Customers
 		))
@@ -366,7 +366,7 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind8', 'Orders', 9, 'Allow'
 	From northwind8.dbo.[Orders] o
-	WHERE o.ShipVia = null or
+	WHERE o.ShipVia is null or
 		o.ShipVia not in (
 			Select ShipperID from northwind8.dbo.Shippers
 		)
@@ -399,7 +399,7 @@ print '------------------------'
 Insert DQLog
 	SELECT o.%%physloc%%, 'northwind8', 'Orders', 11, 'Fix'
 	From northwind8.dbo.[Orders] o
-	WHERE o.ShippedDate = null
+	WHERE o.ShippedDate is null
 
 print '=============== END RULE ## CHECKING ===================='
 
