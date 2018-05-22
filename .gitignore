@@ -8,3 +8,7 @@ DQLogReports2.txt
 .~lock.*
 *.pptx
 Thumbs.db:encryptable
+*.xlsx
+*.key
+*.docx
+DW_northwind_Assign2_Phase1_DQ Summary report.docx

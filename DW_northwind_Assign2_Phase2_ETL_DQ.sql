@@ -749,8 +749,8 @@ SELECT count(*) AS[Reject, check rule 2,11, the output should be 0]
   From factOrders
   WHERE
     -- UnitPrice <= 0 OR
-    Quantity <0 OR Quantity = NULL
-    OR ShippedDateKey = NULL
+    Quantity <0 OR Quantity is NULL
+    OR ShippedDateKey is NULL
 
 -- ' Allow, check rule 3, the output >=0'
 SELECT count(*) AS [Allow, check rule 3, the output >=0]
@@ -760,7 +760,7 @@ SELECT count(*) AS [Allow, check rule 3, the output >=0]
 -- 'Allow. check rule 9, the output >= 0'
 SELECT count(*) AS [Allow. check rule 9, the output >= 0]
   From factOrders
-  WHERE ShipperCompanyName = null or ShipperPhone = null
+  WHERE ShipperCompanyName is null or ShipperPhone is null
 
 -- 'Fix, check rule 11, the output >=0'
 SELECT count(*) AS [Fix, check rule 11, the output >=0]
@@ -793,7 +793,7 @@ SELECT count(*) AS [Fix, Rule 5, post code fix, should be 0]
   WHERE PostalCode NOT IN (
     SELECT PostalCode
     from northwind8.dbo.Customers
-    ) AND  PostalCode != null AND LEN(PostalCode) < 6
+    ) AND   (PostalCode is not null) AND LEN(PostalCode) < 6
 
 SELECT count(*) AS [Reject, Rule 6, check CategoryID through checking CategoryName, should be 0]
   FROM dimProducts
@@ -803,7 +803,7 @@ SELECT count(*) AS [Reject, Rule 6, check CategoryID through checking CategoryNa
     UNION
     SELECT CategoryName
     FROM northwind8.dbo.Categories
-  ) OR CategoryName = null
+  ) OR CategoryName is null
 
 SELECT count(*) AS [Reject, Rule 6, check supplierID, should be 0]
   FROM dimSuppliers
@@ -813,7 +813,7 @@ SELECT count(*) AS [Reject, Rule 6, check supplierID, should be 0]
     UNION
     SELECT SupplierID
     FROM northwind8.dbo.Suppliers
-  ) or SupplierID = null
+  ) or SupplierID is null
 
 -- rule 7, product id from order details, does not exist in factOrders
 -- rule 8, ShipCompany, ShipAddress, CustomerID from orders do not exist in data warehouse
