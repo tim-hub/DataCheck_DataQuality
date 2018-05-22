@@ -752,6 +752,12 @@ SELECT count(*) AS[Reject, check rule 2,11, the output should be 0]
     Quantity <0 OR Quantity is NULL
     OR ShippedDateKey is NULL
 
+-- 'the weird data in fact orders which are not in 11 rules'
+SELECT count(*) AS [Weird Data from factOrder -- order Details table, should be 3]
+  FROM factOrders
+  WHERE UnitPrice <=0 OR Quantity <=0 OR Discount >=1 or TotalPrice <=0
+
+
 -- ' Allow, check rule 3, the output >=0'
 SELECT count(*) AS [Allow, check rule 3, the output >=0]
   From factOrders
